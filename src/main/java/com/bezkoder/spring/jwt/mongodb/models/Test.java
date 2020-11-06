@@ -14,7 +14,7 @@ public class Test {
   private String description;
   private int likes;
   private Date createdAt;
-  private boolean isOffical;
+  private boolean isOfficial;
   private List<Question> questions;
 
   public String getName() {
@@ -60,12 +60,12 @@ public class Test {
     this.id = id;
   }
 
-  public boolean isOffical() {
-    return isOffical;
+  public boolean isOfficial() {
+    return isOfficial;
   }
 
-  public void setOffical(boolean isOffical) {
-    this.isOffical = isOffical;
+  public void setOfficial(boolean isOfficial) {
+    this.isOfficial = isOfficial;
   }
 
   public List<Question> getQuestions() {
