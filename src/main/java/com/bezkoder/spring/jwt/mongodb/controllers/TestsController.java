@@ -3,6 +3,7 @@ package com.bezkoder.spring.jwt.mongodb.controllers;
 import java.util.List;
 import java.util.Optional;
 
+import com.bezkoder.spring.jwt.mongodb.models.ListTest;
 import com.bezkoder.spring.jwt.mongodb.models.Question;
 import com.bezkoder.spring.jwt.mongodb.models.Test;
 import com.bezkoder.spring.jwt.mongodb.repository.QuestionRepository;
@@ -30,7 +31,7 @@ public class TestsController {
   @GetMapping("/all")
   public ResponseEntity<?> allTests() {
     List<Test> allTests = testRepository.findAll();
-    return ResponseEntity.ok(allTests);
+    return ResponseEntity.ok(new ListTest(allTests));
   }
 
   @GetMapping("/{id}")
