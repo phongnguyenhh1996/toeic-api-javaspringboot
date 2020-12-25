@@ -16,6 +16,9 @@ public class Test {
   private Date createdAt;
   private boolean isOfficial;
   private List<Question> questions;
+  private Integer viewCount;
+  private int testType;
+  private Integer testPart;
 
   public String getName() {
     return name;
@@ -75,4 +78,29 @@ public class Test {
   public void setQuestions(List<Question> questions) {
     this.questions = questions;
   }
+
+  public Integer getViewCount() {
+    return viewCount;
+  }
+
+  public void setViewCount(Integer viewCount) {
+    this.viewCount = viewCount;
+  }
+
+  public int getTestType() {
+    return testType;
+  }
+
+  public void setTestType(int testType) {
+    this.testType = testType;
+  }
+
+  public Integer getTestPart() {
+    return testPart;
+  }
+
+  public void setTestPart(Integer testPart) {
+    this.testPart = testPart;
+  }
+
 }
