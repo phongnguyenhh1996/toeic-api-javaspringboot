@@ -8,16 +8,20 @@ import java.util.Optional;
 import com.bezkoder.spring.jwt.mongodb.constants.Constants;
 import com.bezkoder.spring.jwt.mongodb.constants.ETestPart;
 import com.bezkoder.spring.jwt.mongodb.constants.ETestType;
+import com.bezkoder.spring.jwt.mongodb.models.ListTest;
 import com.bezkoder.spring.jwt.mongodb.models.Question;
 import com.bezkoder.spring.jwt.mongodb.models.Test;
 import com.bezkoder.spring.jwt.mongodb.payload.response.MessageResponse;
 import com.bezkoder.spring.jwt.mongodb.payload.response.TestDetailResponse;
 import com.bezkoder.spring.jwt.mongodb.payload.response.TestListResponse;
+import com.bezkoder.spring.jwt.mongodb.repository.ListTestHomePageRepository;
 import com.bezkoder.spring.jwt.mongodb.repository.QuestionRepository;
 import com.bezkoder.spring.jwt.mongodb.repository.TestRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -92,6 +96,17 @@ public class TestsController {
     questions.forEach(question -> question.setTestId(test.getId()));
     questionRepository.saveAll(questions);
     return ResponseEntity.ok(test);
+  }
+  @GetMapping("/list-homepage")
+  public ResponseEntity<?> listTest() {
+    List<Test> listTestFull = testRepository.findByTestType(0,
+        PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "createdAt")));
+    List<Test> listTestReading = testRepository.findByTestType(1,
+        PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "createdAt")));
+    List<Test> listTestListening = testRepository.findByTestType(2,
+        PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "createdAt")));
+    ListTest listTestHomePage = new ListTest(listTestFull, listTestReading, listTestListening);
+    return ResponseEntity.ok(new ListTestHomePageRepository(listTestHomePage));
   }
 
 }
