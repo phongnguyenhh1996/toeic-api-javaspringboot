@@ -19,6 +19,8 @@ public class Test {
   private Integer viewCount;
   private int testType;
   private Integer testPart;
+  private String author;
+  
 
   public String getName() {
     return name;
@@ -101,6 +103,14 @@ public class Test {
 
   public void setTestPart(Integer testPart) {
     this.testPart = testPart;
+  }
+
+  public String getAuthor() {
+    return author;
+  }
+
+  public void setAuthor(String author) {
+    this.author = author;
   }
 
 }

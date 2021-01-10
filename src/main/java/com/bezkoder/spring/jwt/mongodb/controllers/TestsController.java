@@ -83,7 +83,8 @@ public class TestsController {
           .body(new MessageResponse("Error: Full test must be enough " + Constants.FULL_TEST_QUESTION_SIZE + " questions."));
       }
     }
-
+    String userName = principal.getName();
+    test.setAuthor(userName);
     // part test validation
     ETestPart testPart = ETestPart.values()[test.getTestPart()];
     if (testPart.getTotalQuestions() != questions.size()) {
@@ -96,6 +97,7 @@ public class TestsController {
     questions.forEach(question -> question.setTestId(test.getId()));
     questionRepository.saveAll(questions);
     return ResponseEntity.ok(test);
+    
   }
   @GetMapping("/list-homepage")
   public ResponseEntity<?> listTest() {
