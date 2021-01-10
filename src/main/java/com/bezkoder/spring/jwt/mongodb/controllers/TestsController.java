@@ -8,9 +8,11 @@ import java.util.Optional;
 import com.bezkoder.spring.jwt.mongodb.constants.Constants;
 import com.bezkoder.spring.jwt.mongodb.constants.ETestPart;
 import com.bezkoder.spring.jwt.mongodb.constants.ETestType;
+import com.bezkoder.spring.jwt.mongodb.models.CustomUser;
 import com.bezkoder.spring.jwt.mongodb.models.ListTest;
 import com.bezkoder.spring.jwt.mongodb.models.Question;
 import com.bezkoder.spring.jwt.mongodb.models.Test;
+import com.bezkoder.spring.jwt.mongodb.models.User;
 import com.bezkoder.spring.jwt.mongodb.payload.response.MessageResponse;
 import com.bezkoder.spring.jwt.mongodb.payload.response.TestDetailResponse;
 import com.bezkoder.spring.jwt.mongodb.payload.response.TestListResponse;
@@ -24,6 +26,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -83,7 +86,8 @@ public class TestsController {
           .body(new MessageResponse("Error: Full test must be enough " + Constants.FULL_TEST_QUESTION_SIZE + " questions."));
       }
     }
-
+    String userName = principal.getName();
+    test.setAuthor(userName);
     // part test validation
     ETestPart testPart = ETestPart.values()[test.getTestPart()];
     if (testPart.getTotalQuestions() != questions.size()) {
@@ -96,6 +100,7 @@ public class TestsController {
     questions.forEach(question -> question.setTestId(test.getId()));
     questionRepository.saveAll(questions);
     return ResponseEntity.ok(test);
+    
   }
   @GetMapping("/list-homepage")
   public ResponseEntity<?> listTest() {
