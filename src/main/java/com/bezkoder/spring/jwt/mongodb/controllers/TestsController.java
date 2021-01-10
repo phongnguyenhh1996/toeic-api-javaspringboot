@@ -110,5 +110,10 @@ public class TestsController {
     ListTest listTestHomePage = new ListTest(listTestFull, listTestReading, listTestListening);
     return ResponseEntity.ok(new ListTestHomePageRepository(listTestHomePage));
   }
-
+  @GetMapping("/created")
+  public ResponseEntity<?> listCreated(Principal principal){
+    String userName = principal.getName();
+    List<Test> listTestCreated = testRepository.findByAuthor(userName);
+    return ResponseEntity.ok(new TestListResponse(listTestCreated));
+  }
 }
