@@ -1,8 +1,11 @@
 package com.bezkoder.spring.jwt.mongodb.controllers;
 
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.bezkoder.spring.jwt.mongodb.constants.Constants;
@@ -20,8 +23,11 @@ import com.bezkoder.spring.jwt.mongodb.repository.TestRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -30,6 +36,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -51,8 +58,10 @@ public class TestsController {
   @GetMapping("/{id}")
   public ResponseEntity<?> detailTest(@PathVariable("id") String id) {
       Optional<Test> testData = testRepository.findById(id);
+
       Question questionExample = new Question();
       questionExample.setTestId(id);
+
       List<Question> questions = questionRepository.findAll(Example.of(questionExample));
       Test test = new Test();
       if (testData.isPresent()) {
@@ -115,5 +124,34 @@ public class TestsController {
     String userName = principal.getName();
     List<Test> listTestCreated = testRepository.findByAuthor(userName);
     return ResponseEntity.ok(new TestListResponse(listTestCreated));
+  }
+  @GetMapping("/testsPage")
+  public ResponseEntity<Map<String, Object>> getAllTestsPage(
+      @RequestParam(required = false) String name,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "3") int size) {
+
+    try {
+      List<Test> tests = new ArrayList<Test>();
+      Pageable paging = PageRequest.of(page, size);
+      
+      Page<Test> pageTuts;
+      if (name == null)
+        pageTuts = testRepository.findAll(paging);
+      else
+        pageTuts = testRepository.findByNameContainingIgnoreCase(name, paging);
+
+        tests = pageTuts.getContent();
+
+      Map<String, Object> response = new HashMap<>();
+      response.put("tests", tests);
+      response.put("currentPage", pageTuts.getNumber());
+      response.put("totalItems", pageTuts.getTotalElements());
+      response.put("totalPages", pageTuts.getTotalPages());
+
+      return new ResponseEntity<>(response, HttpStatus.OK);
+    } catch (Exception e) {
+      return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 }
