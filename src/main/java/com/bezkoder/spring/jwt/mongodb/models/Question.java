@@ -1,116 +1,50 @@
 package com.bezkoder.spring.jwt.mongodb.models;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
-@Document(collection = "questions")
 public class Question {
-  @Id
-  private String id;
-  private String testId;
-  private Integer type;
-  private Integer part;
-  private Integer questionNumb;
-  private String content;
-  private String trueAnswer;
-  private String audioUrl;
-  private String imageUrl;
-  private String answerDescription;
+    private int questionNumb;
+    private String question;
+    private String imageSrc;
+    private String audioSrc;
+    private Integer questionGroupId;
 
-  public String getId() {
-    return id;
-  }
+    public int getQuestionNumb() {
+        return questionNumb;
+    }
 
-  public void setId(String id) {
-    this.id = id;
-  }
+    public void setQuestionNumb(int questionNumb) {
+        this.questionNumb = questionNumb;
+    }
 
-  public int getType() {
-    return type;
-  }
+    public String getQuestion() {
+        return question;
+    }
 
-  public void setType(int type) {
-    this.type = type;
-  }
+    public void setQuestion(String question) {
+        this.question = question;
+    }
 
-  public int getPart() {
-    return part;
-  }
+    public String getImageSrc() {
+        return imageSrc;
+    }
 
-  public void setPart(int part) {
-    this.part = part;
-  }
+    public void setImageSrc(String imageSrc) {
+        this.imageSrc = imageSrc;
+    }
 
-  public int getQuestionNumb() {
-    return questionNumb;
-  }
+    public String getAudioSrc() {
+        return audioSrc;
+    }
 
-  public void setQuestionNumb(int questionNumb) {
-    this.questionNumb = questionNumb;
-  }
+    public void setAudioSrc(String audioSrc) {
+        this.audioSrc = audioSrc;
+    }
 
-  public String getContent() {
-    return content;
-  }
+    public Integer getQuestionGroupId() {
+        return questionGroupId;
+    }
 
-  public void setContent(String content) {
-    this.content = content;
-  }
-
-  public String getTrueAnswer() {
-    return trueAnswer;
-  }
-
-  public void setTrueAnswer(String trueAnswer) {
-    this.trueAnswer = trueAnswer;
-  }
-
-  public String getAudioUrl() {
-    return audioUrl;
-  }
-
-  public void setAudioUrl(String audioUrl) {
-    this.audioUrl = audioUrl;
-  }
-
-  public String getImageUrl() {
-    return imageUrl;
-  }
-
-  public void setImageUrl(String imageUrl) {
-    this.imageUrl = imageUrl;
-  }
-
-  public String getAnswerDescription() {
-    return answerDescription;
-  }
-
-  public void setAnswerDescription(String answerDescription) {
-    this.answerDescription = answerDescription;
-  }
-
-  public String getTestId() {
-    return testId;
-  }
-
-  public void setTestId(String testId) {
-    this.testId = testId;
-  }
-
-  public Question(String testId, Integer type, Integer part, Integer questionNumb, String content, String trueAnswer,
-      String audioUrl, String imageUrl, String answerDescription) {
-    this.testId = testId;
-    this.type = type;
-    this.part = part;
-    this.questionNumb = questionNumb;
-    this.content = content;
-    this.trueAnswer = trueAnswer;
-    this.audioUrl = audioUrl;
-    this.imageUrl = imageUrl;
-    this.answerDescription = answerDescription;
-  }
-
-  public Question() {
-  }
+    public void setQuestionGroupId(Integer questionGroupId) {
+        this.questionGroupId = questionGroupId;
+    }
 
 }

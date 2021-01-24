@@ -7,7 +7,7 @@ public enum ETestPart {
   PART4(30),
   PART5(30),
   PART6(16),
-  PART7(29);
+  PART7(54);
 
   private int totalQuestions;
 

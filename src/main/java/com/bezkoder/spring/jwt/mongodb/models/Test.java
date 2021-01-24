@@ -1,6 +1,7 @@
 package com.bezkoder.spring.jwt.mongodb.models;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
@@ -12,15 +13,16 @@ public class Test {
   private String id;
   private String name;
   private String description;
+  private int testType;
+  private Integer testPart;
   private int likes;
   private Date createdAt;
   private boolean isOfficial;
-  private List<Question> questions;
   private Integer viewCount;
-  private int testType;
-  private Integer testPart;
   private String author;
-  
+  private HashMap<Integer, Question> questions;
+  private HashMap<Integer, List<Answer>> answers;
+  private HashMap<Integer, CorrectAnswer> correctAnswer;
 
   public String getName() {
     return name;
@@ -73,14 +75,6 @@ public class Test {
     this.isOfficial = isOfficial;
   }
 
-  public List<Question> getQuestions() {
-    return questions;
-  }
-
-  public void setQuestions(List<Question> questions) {
-    this.questions = questions;
-  }
-
   public Integer getViewCount() {
     return viewCount;
   }
@@ -111,6 +105,30 @@ public class Test {
 
   public void setAuthor(String author) {
     this.author = author;
+  }
+
+  public HashMap<Integer, Question> getQuestions() {
+    return questions;
+  }
+
+  public void setQuestions(HashMap<Integer, Question> questions) {
+    this.questions = questions;
+  }
+
+  public HashMap<Integer, CorrectAnswer> getCorrectAnswer() {
+    return correctAnswer;
+  }
+
+  public void setCorrectAnswer(HashMap<Integer, CorrectAnswer> correctAnswer) {
+    this.correctAnswer = correctAnswer;
+  }
+
+  public HashMap<Integer, List<Answer>> getAnswers() {
+    return answers;
+  }
+
+  public void setAnswers(HashMap<Integer, List<Answer>> answers) {
+    this.answers = answers;
   }
 
 }

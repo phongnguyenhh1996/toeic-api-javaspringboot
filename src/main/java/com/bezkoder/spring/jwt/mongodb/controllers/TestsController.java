@@ -2,18 +2,24 @@ package com.bezkoder.spring.jwt.mongodb.controllers;
 
 import java.security.Principal;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
 import com.bezkoder.spring.jwt.mongodb.constants.Constants;
 import com.bezkoder.spring.jwt.mongodb.constants.ETestPart;
 import com.bezkoder.spring.jwt.mongodb.constants.ETestType;
+import com.bezkoder.spring.jwt.mongodb.models.Answer;
+import com.bezkoder.spring.jwt.mongodb.models.CorrectAnswer;
+import com.bezkoder.spring.jwt.mongodb.models.CorrectAnswerDoc;
 import com.bezkoder.spring.jwt.mongodb.models.ListTest;
 import com.bezkoder.spring.jwt.mongodb.models.Question;
+import com.bezkoder.spring.jwt.mongodb.models.QuestionDoc;
 import com.bezkoder.spring.jwt.mongodb.models.Test;
 import com.bezkoder.spring.jwt.mongodb.payload.response.MessageResponse;
 import com.bezkoder.spring.jwt.mongodb.payload.response.TestDetailResponse;
 import com.bezkoder.spring.jwt.mongodb.payload.response.TestListResponse;
+import com.bezkoder.spring.jwt.mongodb.repository.CorrectAnswerRepository;
 import com.bezkoder.spring.jwt.mongodb.repository.ListTestHomePageRepository;
 import com.bezkoder.spring.jwt.mongodb.repository.QuestionRepository;
 import com.bezkoder.spring.jwt.mongodb.repository.TestRepository;
@@ -41,6 +47,8 @@ public class TestsController {
   TestRepository testRepository;
   @Autowired
   QuestionRepository questionRepository;
+  @Autowired
+  CorrectAnswerRepository correctAnswerRepository;
 
   @GetMapping("/all")
   public ResponseEntity<?> allTests() {
@@ -51,9 +59,10 @@ public class TestsController {
   @GetMapping("/{id}")
   public ResponseEntity<?> detailTest(@PathVariable("id") String id) {
       Optional<Test> testData = testRepository.findById(id);
-      Question questionExample = new Question();
-      questionExample.setTestId(id);
-      List<Question> questions = questionRepository.findAll(Example.of(questionExample));
+      Optional<QuestionDoc> questions = questionRepository.findByTestId(id);
+      Optional<CorrectAnswerDoc> correctAnswer = correctAnswerRepository.findByTestId(id);
+
+
       Test test = new Test();
       if (testData.isPresent()) {
         test = testData.get();
@@ -63,7 +72,13 @@ public class TestsController {
           test.setViewCount(test.getViewCount() + 1);
         }
         testRepository.save(test);
-        test.setQuestions(questions);
+        if (questions.isPresent()) {
+          test.setQuestions(questions.get().getQuestions());
+          test.setAnswers(questions.get().getAnswers());
+        }
+        if (correctAnswer.isPresent()) {
+          test.setCorrectAnswer(correctAnswer.get().getCorrectAnswer());
+        }
       }
       return ResponseEntity.ok(new TestDetailResponse(test));
   }
@@ -71,9 +86,16 @@ public class TestsController {
   @PostMapping("/create")
   @PreAuthorize("hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
   public ResponseEntity<?> createTest(Principal principal, @RequestBody Test test) {
-    List<Question> questions = test.getQuestions();
+    //separate question, answer, correctAnswer
+
+    HashMap<Integer, Question> questions = test.getQuestions();
+    HashMap<Integer, List<Answer>> answers = test.getAnswers();
+    HashMap<Integer, CorrectAnswer> correctAnswer = test.getCorrectAnswer();
+
     test.setQuestions(null);
-    test.setViewCount(0);
+    test.setAnswers(null);
+    test.setCorrectAnswer(null);
+    
     // Full test validation
     String testType = ETestType.values()[test.getTestType()].toString();
     if (testType.equals(ETestType.FULL.toString())) {
@@ -83,8 +105,8 @@ public class TestsController {
           .body(new MessageResponse("Error: Full test must be enough " + Constants.FULL_TEST_QUESTION_SIZE + " questions."));
       }
     }
-    String userName = principal.getName();
-    test.setAuthor(userName);
+
+
     // part test validation
     ETestPart testPart = ETestPart.values()[test.getTestPart()];
     if (testPart.getTotalQuestions() != questions.size()) {
@@ -92,10 +114,33 @@ public class TestsController {
         .badRequest()
         .body(new MessageResponse("Error: "+ testPart +" test must be enough " + testPart.getTotalQuestions() + " questions."));
     }
+
+    
+    // set author
+    String userName = principal.getName();
+    test.setAuthor(userName);
+
+    //init some values and save test
+    test.setViewCount(0);
     test.setCreatedAt(new Date());
+
     testRepository.save(test);
-    questions.forEach(question -> question.setTestId(test.getId()));
-    questionRepository.saveAll(questions);
+    
+    // save question
+    QuestionDoc questionDoc = new QuestionDoc();
+    questionDoc.setTestId(test.getId());
+    questionDoc.setQuestions(questions);
+    questionDoc.setAnswers(answers);
+
+    questionRepository.save(questionDoc);
+
+    // save correctAnswer
+    CorrectAnswerDoc correctAnswerDoc = new CorrectAnswerDoc();
+    correctAnswerDoc.setTestId(test.getId());
+    correctAnswerDoc.setCorrectAnswer(correctAnswer);
+
+    correctAnswerRepository.save(correctAnswerDoc);
+
     return ResponseEntity.ok(test);
     
   }
