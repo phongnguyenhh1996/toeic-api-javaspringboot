@@ -56,11 +56,11 @@ public class TestsController {
   @Autowired
   CorrectAnswerRepository correctAnswerRepository;
 
-  @GetMapping("/all")
-  public ResponseEntity<?> allTests() {
-    List<Test> allTests = testRepository.findAll();
-    return ResponseEntity.ok(new TestListResponse(allTests));
-  }
+  // @GetMapping("/all")
+  // public ResponseEntity<?> allTests() {
+  //   List<Test> allTests = testRepository.findAll();
+  //   return ResponseEntity.ok(new TestListResponse(allTests));
+  // }
 
   @GetMapping("/{id}")
   public ResponseEntity<?> detailTest(@PathVariable("id") String id) {
@@ -101,7 +101,7 @@ public class TestsController {
     test.setQuestions(null);
     test.setAnswers(null);
     test.setCorrectAnswer(null);
-    
+
     // Full test validation
     String testType = ETestType.values()[test.getTestType()].toString();
     if (testType.equals(ETestType.FULL.toString())) {
@@ -121,7 +121,7 @@ public class TestsController {
         .body(new MessageResponse("Error: "+ testPart +" test must be enough " + testPart.getTotalQuestions() + " questions."));
     }
 
-    
+
     // set author
     String userName = principal.getName();
     test.setAuthor(userName);
@@ -131,7 +131,7 @@ public class TestsController {
     test.setCreatedAt(new Date());
 
     testRepository.save(test);
-    
+
     // save question
     QuestionDoc questionDoc = new QuestionDoc();
     questionDoc.setTestId(test.getId());
@@ -148,7 +148,7 @@ public class TestsController {
     correctAnswerRepository.save(correctAnswerDoc);
 
     return ResponseEntity.ok(test);
-    
+
   }
   @GetMapping("/list-homepage")
   public ResponseEntity<?> listTest() {
@@ -167,7 +167,7 @@ public class TestsController {
     List<Test> listTestCreated = testRepository.findByAuthor(userName);
     return ResponseEntity.ok(new TestListResponse(listTestCreated));
   }
-  @GetMapping("/testsPage")
+  @GetMapping("/all")
   public ResponseEntity<Map<String, Object>> getAllTestsPage(
       @RequestParam(required = false) String name,
       @RequestParam(defaultValue = "0") int page,
@@ -176,7 +176,7 @@ public class TestsController {
     try {
       List<Test> tests = new ArrayList<Test>();
       Pageable paging = PageRequest.of(page, size);
-      
+
       Page<Test> pageTuts;
       if (name == null)
         pageTuts = testRepository.findAll(paging);
