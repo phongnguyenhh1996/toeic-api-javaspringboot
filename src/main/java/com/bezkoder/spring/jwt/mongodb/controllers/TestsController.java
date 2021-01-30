@@ -171,7 +171,7 @@ public class TestsController {
   public ResponseEntity<Map<String, Object>> getAllTestsPage(
       @RequestParam(required = false) String name,
       @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "3") int size) {
+      @RequestParam(defaultValue = "8") int size) {
 
     try {
       List<Test> tests = new ArrayList<Test>();
