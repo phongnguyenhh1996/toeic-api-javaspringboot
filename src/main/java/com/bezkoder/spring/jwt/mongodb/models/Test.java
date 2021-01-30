@@ -16,6 +16,7 @@ public class Test {
   private int testType;
   private Integer testPart;
   private int likes;
+  private String avatarSrc;
   private Date createdAt;
   private boolean isOfficial;
   private Integer viewCount;
@@ -130,6 +131,14 @@ public class Test {
 
   public void setAnswers(HashMap<Integer, List<Answer>> answers) {
     this.answers = answers;
+  }
+
+  public String getAvatarSrc() {
+    return avatarSrc;
+  }
+
+  public void setAvatarSrc(String avatarSrc) {
+    this.avatarSrc = avatarSrc;
   }
 
   public List<String> getLikeList() {

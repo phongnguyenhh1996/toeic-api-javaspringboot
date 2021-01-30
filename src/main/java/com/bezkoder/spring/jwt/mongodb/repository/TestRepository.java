@@ -16,7 +16,7 @@ public interface TestRepository extends MongoRepository<Test, String> {
 
   List<Test> findByTestType(int testType, Pageable page);
 
-  List<Test> findByAuthor(String userName); 
+  Page<Test> findByAuthor(String userName, Pageable pageable); 
 
   Page<Test> findAll(Pageable pageable);
 
