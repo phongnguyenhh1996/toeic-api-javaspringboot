@@ -20,6 +20,7 @@ public class Test {
   private boolean isOfficial;
   private Integer viewCount;
   private String author;
+  private List<String> likeList;
   private HashMap<Integer, Question> questions;
   private HashMap<Integer, List<Answer>> answers;
   private HashMap<Integer, CorrectAnswer> correctAnswer;
@@ -129,6 +130,14 @@ public class Test {
 
   public void setAnswers(HashMap<Integer, List<Answer>> answers) {
     this.answers = answers;
+  }
+
+  public List<String> getLikeList() {
+    return likeList;
+  }
+
+  public void setLikeList(List<String> likeList) {
+    this.likeList = likeList;
   }
 
 }

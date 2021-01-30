@@ -1,9 +1,11 @@
 package com.bezkoder.spring.jwt.mongodb.controllers;
 
+import java.lang.reflect.Array;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -196,4 +198,32 @@ public class TestsController {
       return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+  @PostMapping("/like/{id}")
+  public ResponseEntity<?> like(Principal principal, @PathVariable("id") String id){
+    Optional<Test> testData = testRepository.findById(id);
+    String userLike = principal.getName();
+    Test test = new Test();
+    if(testData.isPresent()){
+      test = testData.get();
+      List<String> listLike = test.getLikeList();
+      if(listLike == null){
+        List<String> arrLike = new ArrayList<String>();
+        arrLike.add(userLike);
+        listLike = arrLike;
+      } else {
+        if(listLike.contains(userLike)){
+          listLike.remove(userLike);
+        }else{
+          listLike.add(userLike);
+        }
+      }
+      test.setLikeList(listLike);
+      test.setLikes(listLike.size());
+    }
+    testRepository.save(test);
+    return ResponseEntity.ok(new TestDetailResponse(test));
+  }
 }
+
+
+
