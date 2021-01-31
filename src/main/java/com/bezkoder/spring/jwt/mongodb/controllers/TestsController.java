@@ -27,7 +27,6 @@ import com.bezkoder.spring.jwt.mongodb.repository.QuestionRepository;
 import com.bezkoder.spring.jwt.mongodb.repository.TestRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -220,4 +219,32 @@ public class TestsController {
       return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+  @PostMapping("/like/{id}")
+  public ResponseEntity<?> like(Principal principal, @PathVariable("id") String id){
+    Optional<Test> testData = testRepository.findById(id);
+    String userLike = principal.getName();
+    Test test = new Test();
+    if(testData.isPresent()){
+      test = testData.get();
+      List<String> listLike = test.getLikeList();
+      if(listLike == null){
+        List<String> arrLike = new ArrayList<String>();
+        arrLike.add(userLike);
+        listLike = arrLike;
+      } else {
+        if(listLike.contains(userLike)){
+          listLike.remove(userLike);
+        }else{
+          listLike.add(userLike);
+        }
+      }
+      test.setLikeList(listLike);
+      test.setLikes(listLike.size());
+    }
+    testRepository.save(test);
+    return ResponseEntity.ok(new TestDetailResponse(test));
+  }
 }
+
+
+
