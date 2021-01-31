@@ -18,6 +18,7 @@ import com.bezkoder.spring.jwt.mongodb.models.ListTest;
 import com.bezkoder.spring.jwt.mongodb.models.Question;
 import com.bezkoder.spring.jwt.mongodb.models.QuestionDoc;
 import com.bezkoder.spring.jwt.mongodb.models.Test;
+import com.bezkoder.spring.jwt.mongodb.models.TestResultDoc;
 import com.bezkoder.spring.jwt.mongodb.payload.response.MessageResponse;
 import com.bezkoder.spring.jwt.mongodb.payload.response.TestDetailResponse;
 import com.bezkoder.spring.jwt.mongodb.payload.response.TestListResponse;
@@ -25,6 +26,7 @@ import com.bezkoder.spring.jwt.mongodb.repository.CorrectAnswerRepository;
 import com.bezkoder.spring.jwt.mongodb.repository.ListTestHomePageRepository;
 import com.bezkoder.spring.jwt.mongodb.repository.QuestionRepository;
 import com.bezkoder.spring.jwt.mongodb.repository.TestRepository;
+import com.bezkoder.spring.jwt.mongodb.repository.TestResultRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -54,7 +56,8 @@ public class TestsController {
   QuestionRepository questionRepository;
   @Autowired
   CorrectAnswerRepository correctAnswerRepository;
-
+  @Autowired
+  TestResultRepository testResultRepository;
   // @GetMapping("/all")
   // public ResponseEntity<?> allTests() {
   //   List<Test> allTests = testRepository.findAll();
@@ -243,6 +246,18 @@ public class TestsController {
     }
     testRepository.save(test);
     return ResponseEntity.ok(new TestDetailResponse(test));
+  }
+  @PostMapping("{id}/attempt")
+  public ResponseEntity<?> UserAttempt(Principal principal, @PathVariable("id") String id){
+    String testTakers = principal.getName();
+    TestResultDoc testResultDoc = new TestResultDoc();
+    testResultDoc.setUserName(testTakers);
+    testResultDoc.setTestId(id);
+    testResultDoc.setDone(false);
+
+    testResultRepository.save(testResultDoc);
+
+    return ResponseEntity.ok(new MessageResponse("User Has Participated In The Exam"));
   }
 }
 
