@@ -18,6 +18,7 @@ import com.bezkoder.spring.jwt.mongodb.models.ListTest;
 import com.bezkoder.spring.jwt.mongodb.models.Question;
 import com.bezkoder.spring.jwt.mongodb.models.QuestionDoc;
 import com.bezkoder.spring.jwt.mongodb.models.Test;
+import com.bezkoder.spring.jwt.mongodb.models.TestResultDoc;
 import com.bezkoder.spring.jwt.mongodb.payload.response.MessageResponse;
 import com.bezkoder.spring.jwt.mongodb.payload.response.TestDetailResponse;
 import com.bezkoder.spring.jwt.mongodb.payload.response.TestListResponse;
@@ -25,9 +26,9 @@ import com.bezkoder.spring.jwt.mongodb.repository.CorrectAnswerRepository;
 import com.bezkoder.spring.jwt.mongodb.repository.ListTestHomePageRepository;
 import com.bezkoder.spring.jwt.mongodb.repository.QuestionRepository;
 import com.bezkoder.spring.jwt.mongodb.repository.TestRepository;
+import com.bezkoder.spring.jwt.mongodb.repository.TestResultRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -55,7 +56,8 @@ public class TestsController {
   QuestionRepository questionRepository;
   @Autowired
   CorrectAnswerRepository correctAnswerRepository;
-
+  @Autowired
+  TestResultRepository testResultRepository;
   // @GetMapping("/all")
   // public ResponseEntity<?> allTests() {
   //   List<Test> allTests = testRepository.findAll();
@@ -162,11 +164,35 @@ public class TestsController {
     return ResponseEntity.ok(new ListTestHomePageRepository(listTestHomePage));
   }
   @GetMapping("/created")
-  public ResponseEntity<?> listCreated(Principal principal){
-    String userName = principal.getName();
-    List<Test> listTestCreated = testRepository.findByAuthor(userName);
-    return ResponseEntity.ok(new TestListResponse(listTestCreated));
+  public ResponseEntity<?> listCreated(
+    Principal principal,
+    @RequestParam(required = false) String name,
+    @RequestParam(defaultValue = "0") int page,
+    @RequestParam(defaultValue = "8") int size) {
+
+  try {
+    List<Test> tests = new ArrayList<Test>();
+    Pageable paging = PageRequest.of(page, size);
+
+    Page<Test> pageTuts;
+    if (name == null)
+      pageTuts = testRepository.findByAuthor(principal.getName(), paging);
+    else
+      pageTuts = testRepository.findByNameContainingIgnoreCase(name, paging);
+
+      tests = pageTuts.getContent();
+
+    Map<String, Object> response = new HashMap<>();
+    response.put("tests", tests);
+    response.put("currentPage", pageTuts.getNumber());
+    response.put("totalItems", pageTuts.getTotalElements());
+    response.put("totalPages", pageTuts.getTotalPages());
+
+    return new ResponseEntity<>(response, HttpStatus.OK);
+  } catch (Exception e) {
+    return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
   }
+}
   @GetMapping("/all")
   public ResponseEntity<Map<String, Object>> getAllTestsPage(
       @RequestParam(required = false) String name,
@@ -196,4 +222,44 @@ public class TestsController {
       return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+  @PostMapping("/like/{id}")
+  public ResponseEntity<?> like(Principal principal, @PathVariable("id") String id){
+    Optional<Test> testData = testRepository.findById(id);
+    String userLike = principal.getName();
+    Test test = new Test();
+    if(testData.isPresent()){
+      test = testData.get();
+      List<String> listLike = test.getLikeList();
+      if(listLike == null){
+        List<String> arrLike = new ArrayList<String>();
+        arrLike.add(userLike);
+        listLike = arrLike;
+      } else {
+        if(listLike.contains(userLike)){
+          listLike.remove(userLike);
+        }else{
+          listLike.add(userLike);
+        }
+      }
+      test.setLikeList(listLike);
+      test.setLikes(listLike.size());
+    }
+    testRepository.save(test);
+    return ResponseEntity.ok(new TestDetailResponse(test));
+  }
+  @PostMapping("{id}/attempt")
+  public ResponseEntity<?> UserAttempt(Principal principal, @PathVariable("id") String id){
+    String testTakers = principal.getName();
+    TestResultDoc testResultDoc = new TestResultDoc();
+    testResultDoc.setUserName(testTakers);
+    testResultDoc.setTestId(id);
+    testResultDoc.setDone(false);
+
+    testResultRepository.save(testResultDoc);
+
+    return ResponseEntity.ok(new MessageResponse("User Has Participated In The Exam"));
+  }
 }
+
+
+
