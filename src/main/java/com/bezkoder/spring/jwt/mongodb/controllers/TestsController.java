@@ -259,6 +259,20 @@ public class TestsController {
 
     return ResponseEntity.ok(new MessageResponse("User Has Participated In The Exam"));
   }
+  @PostMapping("/mark/{id}")
+  public ResponseEntity<?> MarkTest(Principal principal, @RequestBody HashMap<Integer, CorrectAnswer> correctAnswer, @PathVariable("id") String id){
+    Optional<CorrectAnswerDoc> testCorrectAnswerDoc = correctAnswerRepository.findByTestId(id);
+    
+    if(testCorrectAnswerDoc.isPresent()){
+      HashMap<Integer, CorrectAnswer> testCorrectAnswer = testCorrectAnswerDoc.get().getCorrectAnswer();
+      long totalCorrect = testCorrectAnswer.keySet().stream().filter(number -> {
+        return (testCorrectAnswer.get(number).getAnswerNumb() == correctAnswer.get(number).getAnswerNumb());
+      }).count();
+      return ResponseEntity.ok(new MessageResponse("Total correct: " + totalCorrect));
+    }
+
+    return ResponseEntity.ok(new MessageResponse("Total correct: 0"));
+  }
 }
 
 
