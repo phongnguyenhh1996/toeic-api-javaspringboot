@@ -167,12 +167,12 @@ public class TestsController {
   public ResponseEntity<?> listCreated(
     Principal principal,
     @RequestParam(required = false) String name,
-    @RequestParam(defaultValue = "0") int page,
+    @RequestParam(defaultValue = "1") int page,
     @RequestParam(defaultValue = "8") int size) {
 
   try {
     List<Test> tests = new ArrayList<Test>();
-    Pageable paging = PageRequest.of(page, size);
+    Pageable paging = PageRequest.of(page - 1, size);
 
     Page<Test> pageTuts;
     if (name == null)
@@ -196,12 +196,12 @@ public class TestsController {
   @GetMapping("/all")
   public ResponseEntity<Map<String, Object>> getAllTestsPage(
       @RequestParam(required = false) String name,
-      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "1") int page,
       @RequestParam(defaultValue = "8") int size) {
 
     try {
       List<Test> tests = new ArrayList<Test>();
-      Pageable paging = PageRequest.of(page, size);
+      Pageable paging = PageRequest.of(page - 1, size);
 
       Page<Test> pageTuts;
       if (name == null)
