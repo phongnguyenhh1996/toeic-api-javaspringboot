@@ -21,7 +21,6 @@ import com.bezkoder.spring.jwt.mongodb.models.Test;
 import com.bezkoder.spring.jwt.mongodb.models.TestResultDoc;
 import com.bezkoder.spring.jwt.mongodb.payload.response.MessageResponse;
 import com.bezkoder.spring.jwt.mongodb.payload.response.TestDetailResponse;
-import com.bezkoder.spring.jwt.mongodb.payload.response.TestListResponse;
 import com.bezkoder.spring.jwt.mongodb.repository.CorrectAnswerRepository;
 import com.bezkoder.spring.jwt.mongodb.repository.ListTestHomePageRepository;
 import com.bezkoder.spring.jwt.mongodb.repository.QuestionRepository;
@@ -48,6 +47,7 @@ import org.springframework.web.bind.annotation.RestController;
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/public/tests")
+@PreAuthorize("hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
 public class TestsController {
 
   @Autowired
@@ -58,43 +58,43 @@ public class TestsController {
   CorrectAnswerRepository correctAnswerRepository;
   @Autowired
   TestResultRepository testResultRepository;
-  // @GetMapping("/all")
-  // public ResponseEntity<?> allTests() {
-  //   List<Test> allTests = testRepository.findAll();
-  //   return ResponseEntity.ok(new TestListResponse(allTests));
-  // }
 
   @GetMapping("/{id}")
-  public ResponseEntity<?> detailTest(@PathVariable("id") String id) {
-      Optional<Test> testData = testRepository.findById(id);
-      Optional<QuestionDoc> questions = questionRepository.findByTestId(id);
-      Optional<CorrectAnswerDoc> correctAnswer = correctAnswerRepository.findByTestId(id);
+  public ResponseEntity<?> detailTest(@PathVariable("id") String id,
+      @RequestParam(defaultValue = "false") String result) {
+    Optional<Test> testData = testRepository.findById(id);
+    Optional<QuestionDoc> questions = questionRepository.findByTestId(id);
 
-
-      Test test = new Test();
-      if (testData.isPresent()) {
-        test = testData.get();
-        if (test.getViewCount() == null) {
-          test.setViewCount(1);
-        } else {
-          test.setViewCount(test.getViewCount() + 1);
-        }
-        testRepository.save(test);
-        if (questions.isPresent()) {
-          test.setQuestions(questions.get().getQuestions());
-          test.setAnswers(questions.get().getAnswers());
-        }
+    Test test = new Test();
+    if (testData.isPresent()) {
+      test = testData.get();
+      if (test.getViewCount() == null) {
+        test.setViewCount(1);
+      } else {
+        test.setViewCount(test.getViewCount() + 1);
+      }
+      testRepository.save(test);
+      if (questions.isPresent()) {
+        test.setQuestions(questions.get().getQuestions());
+        test.setAnswers(questions.get().getAnswers());
+      }
+      
+      if (Boolean.parseBoolean(result)) {
+        Optional<CorrectAnswerDoc> correctAnswer = correctAnswerRepository.findByTestId(id);
         if (correctAnswer.isPresent()) {
           test.setCorrectAnswer(correctAnswer.get().getCorrectAnswer());
         }
+      } else {
+        test.setCorrectAnswer(new HashMap<Integer, CorrectAnswer>());
       }
-      return ResponseEntity.ok(new TestDetailResponse(test));
+    }
+    return ResponseEntity.ok(new TestDetailResponse(test));
   }
 
   @PostMapping("/create")
-  @PreAuthorize("hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
+
   public ResponseEntity<?> createTest(Principal principal, @RequestBody Test test) {
-    //separate question, answer, correctAnswer
+    // separate question, answer, correctAnswer
 
     HashMap<Integer, Question> questions = test.getQuestions();
     HashMap<Integer, List<Answer>> answers = test.getAnswers();
@@ -108,27 +108,23 @@ public class TestsController {
     String testType = ETestType.values()[test.getTestType()].toString();
     if (testType.equals(ETestType.FULL.toString())) {
       if (questions.size() != Constants.FULL_TEST_QUESTION_SIZE) {
-        return ResponseEntity
-          .badRequest()
-          .body(new MessageResponse("Error: Full test must be enough " + Constants.FULL_TEST_QUESTION_SIZE + " questions."));
+        return ResponseEntity.badRequest().body(new MessageResponse(
+            "Error: Full test must be enough " + Constants.FULL_TEST_QUESTION_SIZE + " questions."));
       }
     }
-
 
     // part test validation
     ETestPart testPart = ETestPart.values()[test.getTestPart()];
     if (testPart.getTotalQuestions() != questions.size()) {
-      return ResponseEntity
-        .badRequest()
-        .body(new MessageResponse("Error: "+ testPart +" test must be enough " + testPart.getTotalQuestions() + " questions."));
+      return ResponseEntity.badRequest().body(new MessageResponse(
+          "Error: " + testPart + " test must be enough " + testPart.getTotalQuestions() + " questions."));
     }
-
 
     // set author
     String userName = principal.getName();
     test.setAuthor(userName);
 
-    //init some values and save test
+    // init some values and save test
     test.setViewCount(0);
     test.setCreatedAt(new Date());
 
@@ -152,6 +148,7 @@ public class TestsController {
     return ResponseEntity.ok(test);
 
   }
+
   @GetMapping("/list-homepage")
   public ResponseEntity<?> listTest() {
     List<Test> listTestFull = testRepository.findByTestType(0,
@@ -163,53 +160,22 @@ public class TestsController {
     ListTest listTestHomePage = new ListTest(listTestFull, listTestReading, listTestListening);
     return ResponseEntity.ok(new ListTestHomePageRepository(listTestHomePage));
   }
+
   @GetMapping("/created")
-  public ResponseEntity<?> listCreated(
-    Principal principal,
-    @RequestParam(required = false) String name,
-    @RequestParam(defaultValue = "1") int page,
-    @RequestParam(defaultValue = "8") int size) {
-
-  try {
-    List<Test> tests = new ArrayList<Test>();
-    Pageable paging = PageRequest.of(page - 1, size);
-
-    Page<Test> pageTuts;
-    if (name == null)
-      pageTuts = testRepository.findByAuthor(principal.getName(), paging);
-    else
-      pageTuts = testRepository.findByNameContainingIgnoreCase(name, paging);
-
-      tests = pageTuts.getContent();
-
-    Map<String, Object> response = new HashMap<>();
-    response.put("tests", tests);
-    response.put("currentPage", pageTuts.getNumber());
-    response.put("totalItems", pageTuts.getTotalElements());
-    response.put("totalPages", pageTuts.getTotalPages());
-
-    return new ResponseEntity<>(response, HttpStatus.OK);
-  } catch (Exception e) {
-    return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-  }
-}
-  @GetMapping("/all")
-  public ResponseEntity<Map<String, Object>> getAllTestsPage(
-      @RequestParam(required = false) String name,
-      @RequestParam(defaultValue = "1") int page,
-      @RequestParam(defaultValue = "8") int size) {
+  public ResponseEntity<?> listCreated(Principal principal, @RequestParam(required = false) String name,
+      @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "8") int size) {
 
     try {
       List<Test> tests = new ArrayList<Test>();
-      Pageable paging = PageRequest.of(page - 1, size);
+      Pageable paging = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
       Page<Test> pageTuts;
       if (name == null)
-        pageTuts = testRepository.findAll(paging);
+        pageTuts = testRepository.findByAuthor(principal.getName(), paging);
       else
         pageTuts = testRepository.findByNameContainingIgnoreCase(name, paging);
 
-        tests = pageTuts.getContent();
+      tests = pageTuts.getContent();
 
       Map<String, Object> response = new HashMap<>();
       response.put("tests", tests);
@@ -222,22 +188,51 @@ public class TestsController {
       return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
+  @GetMapping("/all")
+  public ResponseEntity<Map<String, Object>> getAllTestsPage(@RequestParam(required = false) String name,
+      @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "8") int size) {
+
+    try {
+      List<Test> tests = new ArrayList<Test>();
+      Pageable paging = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+      Page<Test> pageTuts;
+      if (name == null)
+        pageTuts = testRepository.findAll(paging);
+      else
+        pageTuts = testRepository.findByNameContainingIgnoreCase(name, paging);
+
+      tests = pageTuts.getContent();
+
+      Map<String, Object> response = new HashMap<>();
+      response.put("tests", tests);
+      response.put("currentPage", pageTuts.getNumber());
+      response.put("totalItems", pageTuts.getTotalElements());
+      response.put("totalPages", pageTuts.getTotalPages());
+
+      return new ResponseEntity<>(response, HttpStatus.OK);
+    } catch (Exception e) {
+      return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   @PostMapping("/like/{id}")
-  public ResponseEntity<?> like(Principal principal, @PathVariable("id") String id){
+  public ResponseEntity<?> like(Principal principal, @PathVariable("id") String id) {
     Optional<Test> testData = testRepository.findById(id);
     String userLike = principal.getName();
     Test test = new Test();
-    if(testData.isPresent()){
+    if (testData.isPresent()) {
       test = testData.get();
       List<String> listLike = test.getLikeList();
-      if(listLike == null){
+      if (listLike == null) {
         List<String> arrLike = new ArrayList<String>();
         arrLike.add(userLike);
         listLike = arrLike;
       } else {
-        if(listLike.contains(userLike)){
+        if (listLike.contains(userLike)) {
           listLike.remove(userLike);
-        }else{
+        } else {
           listLike.add(userLike);
         }
       }
@@ -247,8 +242,9 @@ public class TestsController {
     testRepository.save(test);
     return ResponseEntity.ok(new TestDetailResponse(test));
   }
+
   @PostMapping("{id}/attempt")
-  public ResponseEntity<?> UserAttempt(Principal principal, @PathVariable("id") String id){
+  public ResponseEntity<?> UserAttempt(Principal principal, @PathVariable("id") String id) {
     String testTakers = principal.getName();
     TestResultDoc testResultDoc = new TestResultDoc();
     testResultDoc.setUserName(testTakers);
@@ -259,11 +255,13 @@ public class TestsController {
 
     return ResponseEntity.ok(new MessageResponse("User Has Participated In The Exam"));
   }
+
   @PostMapping("/mark/{id}")
-  public ResponseEntity<?> MarkTest(Principal principal, @RequestBody HashMap<Integer, CorrectAnswer> correctAnswer, @PathVariable("id") String id){
+  public ResponseEntity<?> MarkTest(Principal principal, @RequestBody HashMap<Integer, CorrectAnswer> correctAnswer,
+      @PathVariable("id") String id) {
     Optional<CorrectAnswerDoc> testCorrectAnswerDoc = correctAnswerRepository.findByTestId(id);
-    
-    if(testCorrectAnswerDoc.isPresent()){
+
+    if (testCorrectAnswerDoc.isPresent()) {
       HashMap<Integer, CorrectAnswer> testCorrectAnswer = testCorrectAnswerDoc.get().getCorrectAnswer();
       long totalCorrect = testCorrectAnswer.keySet().stream().filter(number -> {
         return (testCorrectAnswer.get(number).getAnswerNumb() == correctAnswer.get(number).getAnswerNumb());
@@ -274,6 +272,3 @@ public class TestsController {
     return ResponseEntity.ok(new MessageResponse("Total correct: 0"));
   }
 }
-
-
-
