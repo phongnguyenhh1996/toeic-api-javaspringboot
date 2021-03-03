@@ -21,7 +21,6 @@ import com.bezkoder.spring.jwt.mongodb.models.Test;
 import com.bezkoder.spring.jwt.mongodb.models.TestResultDoc;
 import com.bezkoder.spring.jwt.mongodb.payload.response.MessageResponse;
 import com.bezkoder.spring.jwt.mongodb.payload.response.TestDetailResponse;
-import com.bezkoder.spring.jwt.mongodb.payload.response.TestListResponse;
 import com.bezkoder.spring.jwt.mongodb.repository.CorrectAnswerRepository;
 import com.bezkoder.spring.jwt.mongodb.repository.ListTestHomePageRepository;
 import com.bezkoder.spring.jwt.mongodb.repository.QuestionRepository;
@@ -155,11 +154,11 @@ public class TestsController {
   @GetMapping("/list-homepage")
   public ResponseEntity<?> listTest() {
     List<Test> listTestFull = testRepository.findByTestType(0,
-        PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "createdAt")));
-    List<Test> listTestReading = testRepository.findByTestType(1,
-        PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "createdAt")));
-    List<Test> listTestListening = testRepository.findByTestType(2,
-        PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "createdAt")));
+        PageRequest.of(0, 4, Sort.by(Sort.Direction.DESC, "createdAt")));
+    List<Test> listTestReading = testRepository.findByTestPartBetween(-1, 4,
+        PageRequest.of(0, 4, Sort.by(Sort.Direction.DESC, "createdAt")));
+    List<Test> listTestListening = testRepository.findByTestPartBetween(3, 7,
+        PageRequest.of(0, 4, Sort.by(Sort.Direction.DESC, "createdAt")));
     ListTest listTestHomePage = new ListTest(listTestFull, listTestReading, listTestListening);
     return ResponseEntity.ok(new ListTestHomePageRepository(listTestHomePage));
   }
