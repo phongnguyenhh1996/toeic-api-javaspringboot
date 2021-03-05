@@ -78,7 +78,7 @@ public class TestsController {
         test.setQuestions(questions.get().getQuestions());
         test.setAnswers(questions.get().getAnswers());
       }
-      
+
       if (Boolean.parseBoolean(result)) {
         Optional<CorrectAnswerDoc> correctAnswer = correctAnswerRepository.findByTestId(id);
         if (correctAnswer.isPresent()) {
@@ -163,17 +163,17 @@ public class TestsController {
 
   @GetMapping("/created")
   public ResponseEntity<?> listCreated(Principal principal, @RequestParam(required = false) String name,
-      @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "8") int size) {
+      @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "8") int size, @RequestParam(required = false) Integer testPart) {
 
     try {
       List<Test> tests = new ArrayList<Test>();
       Pageable paging = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
       Page<Test> pageTuts;
-      if (name == null)
+      if (testPart == null)
         pageTuts = testRepository.findByAuthor(principal.getName(), paging);
       else
-        pageTuts = testRepository.findByNameContainingIgnoreCase(name, paging);
+        pageTuts = testRepository.findByAuthorByTestPart(principal.getName(), testPart, paging);
 
       tests = pageTuts.getContent();
 
