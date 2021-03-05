@@ -22,7 +22,7 @@ public interface TestRepository extends MongoRepository<Test, String> {
 
   Page<Test> findByAuthor(String userName, Pageable pageable);
 
-  Page<Test> findByAuthorByTestPart(String userName, Integer testPart, Pageable pageable);
+  Page<Test> findByAuthorAndTestPart(String userName, Integer testPart, Pageable pageable);
 
   Page<Test> findAll(Pageable pageable);
 

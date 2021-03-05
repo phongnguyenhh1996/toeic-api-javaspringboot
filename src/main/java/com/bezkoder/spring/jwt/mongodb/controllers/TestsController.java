@@ -173,7 +173,7 @@ public class TestsController {
       if (testPart == null)
         pageTuts = testRepository.findByAuthor(principal.getName(), paging);
       else
-        pageTuts = testRepository.findByAuthorByTestPart(principal.getName(), testPart, paging);
+        pageTuts = testRepository.findByAuthorAndTestPart(principal.getName(), testPart, paging);
 
       tests = pageTuts.getContent();
 
