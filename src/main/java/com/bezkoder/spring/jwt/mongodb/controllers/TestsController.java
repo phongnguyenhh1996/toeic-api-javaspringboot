@@ -114,10 +114,12 @@ public class TestsController {
     }
 
     // part test validation
-    ETestPart testPart = ETestPart.values()[test.getTestPart()];
-    if (testPart.getTotalQuestions() != questions.size()) {
-      return ResponseEntity.badRequest().body(new MessageResponse(
-          "Error: " + testPart + " test must be enough " + testPart.getTotalQuestions() + " questions."));
+    if (test.getTestPart() != null) {
+      ETestPart testPart = ETestPart.values()[test.getTestPart()];
+      if (testPart.getTotalQuestions() != questions.size()) {
+        return ResponseEntity.badRequest().body(new MessageResponse(
+            "Error: " + testPart + " test must be enough " + testPart.getTotalQuestions() + " questions."));
+      }
     }
 
     // set author
