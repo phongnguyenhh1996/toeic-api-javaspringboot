@@ -262,15 +262,19 @@ public class TestsController {
   public ResponseEntity<?> MarkTest(Principal principal, @RequestBody HashMap<Integer, CorrectAnswer> correctAnswer,
       @PathVariable("id") String id) {
     Optional<CorrectAnswerDoc> testCorrectAnswerDoc = correctAnswerRepository.findByTestId(id);
-
+    Map<String, Object> response = new HashMap<>();
+    long totalCorrect = 0;
+    int totalQuestion = 0;
     if (testCorrectAnswerDoc.isPresent()) {
       HashMap<Integer, CorrectAnswer> testCorrectAnswer = testCorrectAnswerDoc.get().getCorrectAnswer();
-      long totalCorrect = testCorrectAnswer.keySet().stream().filter(number -> {
-        return (testCorrectAnswer.get(number).getAnswerNumb() == correctAnswer.get(number).getAnswerNumb());
+      totalQuestion = testCorrectAnswer.size();
+      totalCorrect = testCorrectAnswer.keySet().stream().filter(number -> {
+        return (correctAnswer.get(number) != null &&
+        testCorrectAnswer.get(number).getAnswerNumb() == correctAnswer.get(number).getAnswerNumb());
       }).count();
-      return ResponseEntity.ok(new MessageResponse("Total correct: " + totalCorrect));
     }
-
-    return ResponseEntity.ok(new MessageResponse("Total correct: 0"));
+    response.put("correct", totalCorrect);
+    response.put("total_question", totalQuestion);
+    return ResponseEntity.ok(response);
   }
 }
